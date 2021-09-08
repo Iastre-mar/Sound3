@@ -9,7 +9,7 @@ from fourier_transformer import Fft
 QMAXSIZE = 20  # Максимальное число элементов в очереди
 audio_input_queue = multiprocessing.Queue(QMAXSIZE)
 
-n_channels = 2  # Число каналов
+n_channels = 1  # Число каналов
 fs = 44100  # Частота дискретизации
 chunk_size = 1024 * n_channels  # Размер чанка в фреймах
 stream_reader = audio_reader.Reader(audio_input_queue, n_channels, fs, chunk_size)  # Микрофон
@@ -31,7 +31,8 @@ count = 0
 output_dir_fourier = os.path.join('./data/fourier')
 os.makedirs(os.path.dirname(output_dir_fourier), exist_ok=True)
 filename_prefix_fourier = 'four'
-fft = Fft(fs=fs, output_dir_fourier=output_dir_fourier, prefix=filename_prefix_fourier)
+fft = Fft(fs=fs, chunk_size=chunk_size, four_length_second=wav_length_second,
+          output_dir_fourier=output_dir_fourier, prefix=filename_prefix_fourier)
 
 stream_reader.start_streaming()
 start_time = time.time()
@@ -40,7 +41,7 @@ while count < max_count:
         achunk = audio_input_queue.get()
         file_writer.write_wav(achunk)
         fft.name = file_writer.name
-        fft.transform(achunk)
+        fft.write_four(achunk)
         count += 1
 print('Длительность работы программы: {:.4f} s'.format(time.time() - start_time))
 print('Длительность записанных wav файлов: {:.4f} s'.format(chunk_size * max_count / fs))
